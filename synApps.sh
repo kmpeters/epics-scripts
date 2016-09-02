@@ -295,13 +295,13 @@ then
       FUNC=fetch
       ;;
     
-    "status")
+    "stat")
       echo "-> status"
       FULL_STATUS=False
       FUNC=status
       ;;
     
-    "status-full")
+    "status")
       echo "-> status-full"
       FULL_STATUS=True
       FUNC=status
@@ -331,7 +331,7 @@ then
   fi
   
 else
-  echo "Usage: synApps.sh <clone|fetch|status|status-full|rebase>"
+  echo "Usage: synApps.sh <clone|fetch|status|stat|rebase>"
   exit 1
 fi
 
