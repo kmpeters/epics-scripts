@@ -82,7 +82,14 @@ status() {
   
   if [[ ${FULL_STATUS} == "False" ]]
   then
-    git status | grep "^Your branch"
+    #!git status | grep "Your branch"
+    STATUS=`git status | grep "Your branch"`
+    if [[ "${STATUS}" != "" ]]; then
+      echo ${STATUS}
+    else
+      # Old versions of git lack this message, so simulate it
+      echo "Your branch is up-to-date with 'origin/master'."
+    fi  
   else
     git status
   fi
@@ -103,8 +110,14 @@ fetch() {
 update() {
   enterDirIfExists ${1}
   
-  STATUS=`git status | grep "^Your branch"`
-  echo ${STATUS}
+  STATUS=`git status | grep "Your branch"`
+  if [[ "${STATUS}" != "" ]]; then
+    echo ${STATUS}
+  else
+    # Old versions of git lack this message, so simulate it
+    echo "Your branch is up-to-date with 'origin/master'."
+  fi
+  
   if [[ "${STATUS}" =~ "can be fast-forwarded" ]]
   then
     # Auto stashing and applying changes frequently causes merge conflicts
