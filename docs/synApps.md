@@ -47,7 +47,7 @@ ELSE "git status" shows non-trivial changes
 THEN ???
 "exit" # once the rebase is complete
 ```
-In the ??? scenario a judgement call needs to be made.  The git-stash approach can be used, which may result in merge conflicts.  The risk of merge conflicts can be lessened by renaming modified files, checking out clean versions, rebasing, then manually copying the renamed files back.
+In the ??? scenario a judgement call needs to be made.  The git-stash approach can be used, which may result in merge conflicts.  The risk of merge conflicts can be reduced by renaming local-modified files, checking out clean versions, rebasing, then manually copying the locally-modified files back.
 
 ## Supported platforms
 * RHEL6

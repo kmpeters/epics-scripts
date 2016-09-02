@@ -5,13 +5,14 @@ A script that makes it easy to quickly generate a clean vxWorks or Linux IOC.
 ```
 $ ./makeIOC.sh 
 Usage: makeIOC.sh <vxWorks|Linux> <ioc_name>
-
 ```
 Running the command will create a directory named <ioc_name> based on [Kevin's fork of xxx](https://github.com/kmpeters/xxx) in your current working directory. The script will warn you and do nothing if the <ioc_name> directory already exists.
 
 ## Good things to know
 
-* IOCs based on the script build all of the support into the IOC that xxx does; adding support that has been removed should only require copying some startup files (recompiling the IOC shouldn't be necessary)
+* IOCs based on the script build into the IOC all of the support xxx does
+  * Adding support that has been removed should only require copying startup files
+  * Recompiling the IOC shouldn't be necessary
 * The IOC that created is under local git control by default
   * The "deployed" branch contains the <ioc_name> IOC
   * The "vxWorks" or "Linux" branch contains the pruned xxx directory on which the <ioc_name> is based
