@@ -1,4 +1,4 @@
-# epics-scripts documentation
+# Documentation
 The less-fun and more-important part of development.
 
 ## makeIOC.sh
