@@ -135,22 +135,19 @@ update() {
     if [[ "${OS}" == "Windows_NT" ]]
     then
       OLD_MSYSTEM=${MSYSTEM}
-      export MSYSTEM=rebasing
-    else
-      OLD_PS1=${PS1}
-      export PS1="rebasing $ "
-    fi
+      export MSYSTEM="Rebasing ${1}"
+
+      # Run a new bash instance for interactive rebasing
+      bash
     
-    # Run a new bash instance for interactive rebasing
-    bash
-    
-    # Restore the original prompt
-    if [[ "${OS}" == "Windows_NT" ]]
-    then
+      # Restore the original prompt
       export MSYSTEM=${OLD_MSYSTEM}
     else
-      export PS1=${OLD_PS1}
+      # Run a new bash instance for interactive rebasing
+      # Note --rcfile also works
+      bash --init-file <(echo "PS1='Rebasing ${1} $ '") -i
     fi
+    
   fi
   
   exitDir ${1}
