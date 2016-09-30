@@ -51,8 +51,8 @@ setup() {
   EPICS_MODULES+=" xxx"
   ###
   AREADETECTOR_MODULES+=" ADCore"
-  AREADETECTOR_MODULES+=" ADBinaries"
   AREADETECTOR_MODULES+=" ADExample"
+  AREADETECTOR_MODULES+=" ADSupport"
 
 }
 
