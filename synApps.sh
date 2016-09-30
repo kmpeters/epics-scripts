@@ -126,28 +126,36 @@ update() {
     #!git rebase origin/master
     #!git stash apply
     
-    ### Manually rebase instead
-    echo "- Rebasing ${1} manually. Type \"exit\" when done."
-    echo "$ git status"
-    git status
-    
-    # Change the prompt so the user knows they're in a different shell
-    if [[ "${OS}" == "Windows_NT" ]]
+    if [[ ${MANUAL_REBASE} == "True" ]]
     then
-      OLD_MSYSTEM=${MSYSTEM}
-      export MSYSTEM="Rebasing ${1}"
-
-      # Run a new bash instance for interactive rebasing
-      bash
-    
-      # Restore the original prompt
-      export MSYSTEM=${OLD_MSYSTEM}
+      ### Manually rebase instead
+      echo "- Rebasing ${1} manually. Type \"exit\" when done."
+      echo "$ git status"
+      git status
+      
+      # Change the prompt so the user knows they're in a different shell
+      if [[ "${OS}" == "Windows_NT" ]]
+      then
+        OLD_MSYSTEM=${MSYSTEM}
+        export MSYSTEM="Rebasing ${1}"
+        
+        # Run a new bash instance for interactive rebasing
+        bash
+        
+        # Restore the original prompt
+        export MSYSTEM=${OLD_MSYSTEM}
+      else
+        # Run a new bash instance for interactive rebasing
+        # Note --rcfile also works
+        bash --init-file <(echo "PS1='Rebasing ${1} $ '") -i
+      fi
     else
-      # Run a new bash instance for interactive rebasing
-      # Note --rcfile also works
-      bash --init-file <(echo "PS1='Rebasing ${1} $ '") -i
+      ### Automatically rebase
+      echo "- Automatically rebasing ${1}"
+      git stash && git rebase origin/master && git stash apply
+      echo "$ git status"
+      git status
     fi
-    
   fi
   
   exitDir ${1}
@@ -306,6 +314,13 @@ then
     
     "rebase")
       echo "-> rebase"
+      MANUAL_REBASE=True
+      FUNC=update
+      ;;
+    
+    "auto-rebase")
+      echo "-> auto-rebase"
+      MANUAL_REBASE=False
       FUNC=update
       ;;
     
@@ -328,7 +343,7 @@ then
   fi
   
 else
-  echo "Usage: synApps.sh <clone|fetch|status|stat|rebase>"
+  echo "Usage: synApps.sh <clone|fetch|status|stat|rebase|auto-rebase>"
   exit 1
 fi
 
