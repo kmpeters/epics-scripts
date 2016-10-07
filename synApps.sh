@@ -239,6 +239,11 @@ clone() {
   for module in ${AREADETECTOR_MODULES}; do
     if [ -d "${module}" ]; then
       echo "${module} already exists"
+      if [ "$(ls -A ${module})" ]; then
+        echo "${module} is not empty"
+      else
+        git clone ${GITHUB}/areaDetector/${module}.git
+      fi
     else
       git clone ${GITHUB}/areaDetector/${module}.git
     fi
