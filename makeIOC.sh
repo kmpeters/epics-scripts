@@ -14,9 +14,9 @@ case $num_args in
     PREFIX=$2
     
     # Validate OS choice
-    if [ "${OS}" != "Linux" ] && [ "${OS}" != "vxWorks" ]
+    if [ "${OS}" != "Linux" ] && [ "${OS}" != "vxWorks" ] && [ "${OS}" != "Darwin" ]
     then
-      echo "\"${OS}\" is not a valid OS choice. Choose Linux or vxWorks."
+      echo "\"${OS}\" is not a valid OS choice. Choose vxWorks, Linux or Darwin."
       exit 1
     fi
     
@@ -30,7 +30,7 @@ case $num_args in
     ;;
   
   * )
-    echo "Usage: makeIOC.sh <vxWorks|Linux> <ioc_name>"
+    echo "Usage: makeIOC.sh <vxWorks|Linux|Darwin> <ioc_name>"
     exit 1
     ;;
 esac
