@@ -4,14 +4,35 @@ import argparse
 import os
 #import os.path
 import sys
+import re
+
+fullIgnorePattern = re.compile("bin|dbd|db|envPaths")
+partialIgnorePattern = re.compile("O\.")
+
+def ignoreCheck(name):
+  if fullIgnorePattern.fullmatch(name):
+    ignore = True
+  elif partialIgnorePattern.match(name):
+    ignore = True
+  else:
+    ignore = False
+  return ignore
 
 def traverse(path):
   for item in os.scandir(path):
     if item.is_dir():
-      print(item.path)
-      traverse(item.path)
+      if ignoreCheck(item.name):
+        continue
+      else:
+        #!print(item.name)
+        print(item.path)
+        traverse(item.path)
     else:
-      print(item.path)
+      if ignoreCheck(item.name):
+        continue
+      else:
+        #!print(item.name)
+        print(item.path)
 
 parser = argparse.ArgumentParser(description='N/A')
 
