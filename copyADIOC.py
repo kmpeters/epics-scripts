@@ -5,6 +5,13 @@ import os
 #import os.path
 import sys
 
+def traverse(path):
+  for item in os.scandir(path):
+    if item.is_dir():
+      print(item.path)
+      traverse(item.path)
+    else:
+      print(item.path)
 
 parser = argparse.ArgumentParser(description='N/A')
 
@@ -38,3 +45,6 @@ print()
 
 # [fozzi ~/development/epics-scripts]$ ./copyADIOC.py =1/andor3IOC ioc/42idAND
 # Namespace(destination='ioc/42idAND', source='/APSshare/epics/synApps_5_8/support/areaDetector-2-4/ADAndor3/iocs/andor3IOC')
+
+traverse(results.source)
+
