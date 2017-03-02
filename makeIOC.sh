@@ -6,6 +6,9 @@ num_args=$#
 #!echo $num_args
 INDENT="> "
 
+# Default to synApps_5_8 for now
+VER="_5_8"
+
 case $num_args in 
   2 )
     #!echo "$1"
@@ -18,6 +21,8 @@ case $num_args in
     then
       echo "\"${OS}\" is not a valid OS choice. Choose vxWorks, Linux, Darwin or Windows."
       exit 1
+    else
+      BRANCH_OS="${OS}${VER}"
     fi
     
     # Check for existing IOC dir
@@ -42,14 +47,18 @@ cd xxx
 
 #!git branch
 
+# The "master" branch may not be relevant as development progresses
+echo "${INDENT}Creating local master branch..."
+git branch -f master${VER} origin/master${VER}
+
 echo "${INDENT}Creating local ${OS} branch..."
-git branch -f ${OS} origin/${OS}
+git branch -f ${BRANCH_OS} origin/${BRANCH_OS}
 
 #!git status
 #!git branch
 
 echo "${INDENT}Switching to ${OS} branch..."
-git checkout ${OS}
+git checkout ${BRANCH_OS}
 
 echo "${INDENT}Creating local deployed branch..."
 git branch deployed
