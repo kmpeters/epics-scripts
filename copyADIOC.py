@@ -6,6 +6,11 @@ import os
 import sys
 import re
 
+# TODO:
+# 1. copy files
+# 2. correct stuff in files
+# 3. add files
+
 fullIgnorePattern = re.compile("bin|dbd|db|envPaths")
 partialIgnorePattern = re.compile("O\.")
 
