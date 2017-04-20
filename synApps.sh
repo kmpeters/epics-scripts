@@ -51,7 +51,7 @@ setup() {
   EPICS_MODULES+=" xxx"
   ###
   AREADETECTOR_MODULES+=" ADCore"
-  AREADETECTOR_MODULES+=" ADExample"
+  AREADETECTOR_MODULES+=" ADSimDetector"
   AREADETECTOR_MODULES+=" ADSupport"
 
 }
@@ -205,7 +205,8 @@ clone() {
   if [ -d "support" ]; then
     echo "support already exists"
   else
-    git clone ${GITHUB}/EPICS-synApps/support.git
+    echo "cloning support"
+    git clone --quiet ${GITHUB}/EPICS-synApps/support.git
   fi
   cd support
   
@@ -214,7 +215,8 @@ clone() {
     if [ -d "${module}" ]; then
       echo "${module} already exists"
     else
-      git clone ${GITHUB}/EPICS-synApps/${module}.git
+      echo "cloning ${module}"
+      git clone --quiet ${GITHUB}/EPICS-synApps/${module}.git
     fi
   done
   
@@ -223,7 +225,20 @@ clone() {
     if [ -d "${module}" ]; then
       echo "${module} already exists"
     else
-      git clone ${GITHUB}/epics-modules/${module}.git
+      echo "cloning ${module}"
+      git clone --quiet ${GITHUB}/epics-modules/${module}.git
+      
+      # Handle special cases
+      if [ "${module}" == "stream" ]; then
+        # stream is just a wrapper; update the submodule
+        cd stream
+        echo "initializing StreamDevice submodule"
+        git submodule --quiet init
+        # the --quiet flag appears to be ignored when doing the update with git v1.7.1
+        git submodule --quiet update
+        cd ..
+      fi
+      
     fi
   done
   
@@ -231,21 +246,24 @@ clone() {
   if [ -d "areaDetector" ]; then
     echo "areaDetector already exists"
   else
-    git clone ${GITHUB}/areaDetector/areaDetector
+    echo "cloning areaDetector"
+    git clone --quiet ${GITHUB}/areaDetector/areaDetector
   fi
   cd areaDetector
 
   ### areaDetector modules
   for module in ${AREADETECTOR_MODULES}; do
     if [ -d "${module}" ]; then
-      echo "${module} already exists"
+      #!echo "${module} already exists"
       if [ "$(ls -A ${module})" ]; then
         echo "${module} is not empty"
       else
-        git clone ${GITHUB}/areaDetector/${module}.git
+        echo "cloning ${module}"
+        git clone --quiet ${GITHUB}/areaDetector/${module}.git
       fi
     else
-      git clone ${GITHUB}/areaDetector/${module}.git
+      echo "cloning ${module}"
+      git clone --quiet ${GITHUB}/areaDetector/${module}.git
     fi
   done
   
@@ -258,25 +276,33 @@ clone() {
     if [ -d "allenBradley-2-3" ]; then
       echo "allenBradley-2-3 already exists"
     else
+      echo "fetching & extracting allenBradley-2-3"
       # http://www.aps.anl.gov/epics/modules/bus/allenBradley
-      ${WGET} --no-check-certificate -O tar/allenBradley-2.3.tar.gz https://www.aps.anl.gov/epics/download/modules/allenBradley-2.3.tar.gz 
+      ${WGET} --no-check-certificate --quiet -O tar/allenBradley-2.3.tar.gz https://www.aps.anl.gov/epics/download/modules/allenBradley-2.3.tar.gz 
       
-      tar xzvf tar/allenBradley-2.3.tar.gz
+      # The synApps build can't handle "."
+      #!tar xzvf tar/allenBradley-2.3.tar.gz
+      tar xzf tar/allenBradley-2.3.tar.gz
       mv allenBradley-2.3 allenBradley-2-3
     fi
     
-    if [ -d "seq-2-2-3" ]; then
-      echo "seq-2-2-3 already exists"
+    if [ -d "seq-2-2-4" ]; then
+      echo "seq-2-2-4 already exists"
     else
+      echo "fetching & extracting seq-2-2-4"
       # http://www-csr.bessy.de/control/SoftDist/sequencer/Installation.html#download
-      ${WGET} --no-check-certificate -O tar/seq-2.2.3.tar.gz http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.2.3.tar.gz
+      ${WGET} --no-check-certificate --quiet -O tar/seq-2.2.4.tar.gz http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.2.4.tar.gz
       
-      tar xzvf tar/seq-2.2.3.tar.gz
-      mv seq-2.2.3 seq-2-2-3
+      # The synApps build can't handle "."
+      #!tar xzvf tar/seq-2.2.4.tar.gz
+      tar xzf tar/seq-2.2.4.tar.gz
+      mv seq-2.2.4 seq-2-2-4
     fi
     
     rm -rf tar/
   fi
+
+  echo "done cloning synApps"
 }
 
 #!echo ${#}
