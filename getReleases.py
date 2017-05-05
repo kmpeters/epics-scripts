@@ -3,6 +3,8 @@
 #  /APSshare/anaconda3/x86_64/bin/python -> python3.5*
 #
 
+import sys
+import argparse
 import os
 import json
 import urllib.request as urllib2
@@ -107,5 +109,55 @@ def download_releases(user=None, repo=None, tag=None, latest=False, token=None, 
     # Hard-code a tag width for now.  
     print("{0}\t{1:12}\t[{2}]".format(date, version, rType))
 
+def main(options):
+  #
+  user = options.github_user
+  repo = options.github_repo
   
-download_releases()
+  version = options.version
+  latest = options.latest
+  interactive = options.interactive
+  
+  listVersions = options.list
+  ignoreTags = options.ignore_tags
+  ignoreReleases = options.ignore_releases
+  
+  if ignoreTags == True and ignoreRelease == True:
+    # The user doesn't want to see anything
+    print("Doing nothing (ignoring both releases and tags")
+    sys.exit(0)
+    
+  if interactive == True:
+    # Listing the versions is required for interactive mode
+    listVersions = True
+  
+  # Only download one version (version > interactive > latest)
+  if version != None:
+    # Download the version that the user specified on the command line
+    latest = False
+    interactive = False
+  if interactive == True:
+    # Ask the user which version they want
+    latest = False
+  # lastest only works if interactive and version are not specified
+    
+  
+
+if __name__ == '__main__':
+  parser = argparse.ArgumentParser("getReleases.py")
+  
+  parser.add_argument('-l', action="store_true", dest='list', default=False)
+  parser.add_argument('--ignore-tags', action="store_true", default=False)
+  parser.add_argument('--ignore-releases', action="store_true", default=False)
+  parser.add_argument('--latest', action="store_true", default=False)
+  parser.add_argument('-i', action="store_true", dest='interactive', default=False)
+  parser.add_argument('github_user', action="store", default=None)
+  parser.add_argument('github_repo', action="store", default=None)
+  parser.add_argument('version', nargs='?', default=None)
+  
+  options = parser.parse_args(sys.argv[1:])
+  print(options)
+  
+  main(options)
+  
+  #!download_releases()
