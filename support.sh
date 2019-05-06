@@ -24,9 +24,9 @@ setup() {
   # The sequencer would be here if it was on github
   EPICS_MODULES+=" motor"
   ### motor driver modules
-  MOTOR_MODULES+=" motorMotorSim"
+  MOTOR_SUBMODULES+=" motorMotorSim"
+  #!MOTOR_SUBMODULES+=" motorScriptMotor"
   MOTOR_MODULES+=" motorVMC"
-  #!MOTOR_MODULES+=" motorScriptMotor"
   ### These are needed for specific motor drivers
   #!EPICS_MODULES+=" ipac"
   #!EPICS_MODULES+=" lua"
@@ -42,20 +42,32 @@ setup() {
 
 #
 enterDirIfExists() {
-  echo "> ${1}"
-  if [ -d "${1}" ]
+  directory=${1}
+  echo "> ${directory}"
+  
+  if [ "${directory}" == "support" ]
   then
-    cd ${1}
+    directory=.
+  fi
+  
+  if [ -d "${directory}" ]
+  then
+    cd ${directory}
   else
-    echo "\"${1}\" directory doesn't exist"
+    echo "\"${directory}\" directory doesn't exist"
     exit 1
   fi
 }
 
 #
 exitDir() {
-  if [[ "${1}" != "support" && "${1}" != "areaDetector" ]]
+  if [[ ${1} == *"/"* ]]
   then
+    # We're in the motor submodules dir
+    cd ../..
+  elif [[ "${1}" != "support" && "${1}" != "motor" ]]
+  then
+    # We're in a module directory
     cd ..
   fi
 }
@@ -150,12 +162,6 @@ main() {
   # Create module lists
   setup
   
-  # It is assumed that this dir already exists
-  cd ${SYNAPPS_DIR}
-  
-  ### support
-  ${FUNC} support
-
   ### synApps modules
   for module in ${SYNAPPS_MODULES}; do
     ${FUNC} ${module}
@@ -164,17 +170,24 @@ main() {
   ### EPICS modules
   for module in ${EPICS_MODULES}; do
     ${FUNC} ${module}
+    
+    #
+    if [ "${module}" == "motor" ]; then
+      # submodules
+      for submodule in ${MOTOR_SUBMODULES}; do
+        ${FUNC} modules/${submodule}
+      done
+      
+      # We need to manually exit the motor dir
+      cd ..
+    fi
   done
 
-  ### areaDetector
-  ${FUNC} areaDetector
-
-  ### areaDetector modules
-  for module in ${AREADETECTOR_MODULES}; do
-    ${FUNC} ${module}
+  ### stand-alone motor modules
+  for motor_module in ${MOTOR_MODULES}; do
+    ${FUNC} ${motor_module}
   done
   
-  cd ..
 }
 
 # The cloning function is very similar to main(), but not similar enough to be combined
@@ -224,7 +237,7 @@ clone() {
         echo "initializing motor submodules"
         git submodule --quiet init
         # the --quiet flag appears to be ignored when doing the update with git v1.7.1
-        for submodule in ${MOTOR_MODULES}; do
+        for submodule in ${MOTOR_SUBMODULES}; do
           if [ -d "modules/${submodule}" ]; then
             # Only clone into an existing directory if it is empty
             if [ "$(ls -A modules/${submodule})" ]; then
@@ -233,13 +246,21 @@ clone() {
               echo "updating ${submodule}"
               git submodule --quiet update modules/${submodule}
             fi
-          else
-            echo "cloning ${submodule}"
-            git clone --quiet ${GITHUB}/epics-motor/${submodule}.git modules/${submodule}
           fi
         done
+        
         exitDir ${module}
       fi
+    fi
+  done
+  
+  # Stand-alone motor modules
+  for motor_module in ${MOTOR_MODULES}; do
+    if [ -d "${motor_module}" ]; then
+      echo "${motor_module} already exists"
+    else
+      echo "cloning ${motor_module}"
+      git clone --quiet ${GITHUB}/epics-motor/${motor_module}.git
     fi
   done
   
@@ -323,7 +344,7 @@ then
   esac
   
 else
-  echo "Usage: synApps.sh <clone|fetch|status|stat|rebase|auto-rebase>"
+  echo "Usage: support.sh <clone|fetch|status|stat|rebase|auto-rebase>"
   exit 1
 fi
 
