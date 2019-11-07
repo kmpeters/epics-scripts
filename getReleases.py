@@ -122,7 +122,7 @@ def main(options):
   ignoreTags = options.ignore_tags
   ignoreReleases = options.ignore_releases
   
-  if ignoreTags == True and ignoreRelease == True:
+  if ignoreTags == True and ignoreReleases == True:
     # The user doesn't want to see anything
     print("Doing nothing (ignoring both releases and tags")
     sys.exit(0)
@@ -140,8 +140,10 @@ def main(options):
     # Ask the user which version they want
     latest = False
   # lastest only works if interactive and version are not specified
-    
   
+  # Do the stuff
+  download_releases(user=user, repo=repo, quiet=False)
+
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser("getReleases.py")
@@ -159,5 +161,4 @@ if __name__ == '__main__':
   print(options)
   
   main(options)
-  
-  #!download_releases()
+ 
