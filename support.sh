@@ -3,9 +3,6 @@
 # A script to create & maintain a support directory for motor development
 #
 
-# Stuff to customize
-SYNAPPS_DIR=synApps
-
 setup() {
 
   GITHUB=https://github.com
@@ -17,16 +14,17 @@ setup() {
   ### Use the synApps build system to simplify the process of updating RELEASE files
   SYNAPPS_MODULES+=" support"
   SYNAPPS_MODULES+=" configure"
-  # utils is necessary for 'make release' to succeed and is helpful when using xxx
+  # utils is necessary for 'make release' to succeed
   SYNAPPS_MODULES+=" utils"
   ### These are required to build motor support
   EPICS_MODULES+=" asyn"
   EPICS_MODULES+=" busy"
-  # The sequencer would be here if it was on github
+  # seq would be here if it was on github
   ### These are needed for specific motor drivers
   EPICS_MODULES+=" ipac"
   EPICS_MODULES+=" lua"
   EPICS_MODULES+=" modbus"
+  # motor 
   EPICS_MODULES+=" motor"
   ### motor driver modules
   MOTOR_SUBMODULES+=" motorMotorSim"
