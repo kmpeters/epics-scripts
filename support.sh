@@ -17,24 +17,25 @@ setup() {
   ### Use the synApps build system to simplify the process of updating RELEASE files
   SYNAPPS_MODULES+=" support"
   SYNAPPS_MODULES+=" configure"
+  # utils is necessary for 'make release' to succeed and is helpful when using xxx
   SYNAPPS_MODULES+=" utils"
   ### These are required to build motor support
   EPICS_MODULES+=" asyn"
   EPICS_MODULES+=" busy"
   # The sequencer would be here if it was on github
+  ### These are needed for specific motor drivers
+  EPICS_MODULES+=" ipac"
+  EPICS_MODULES+=" lua"
+  EPICS_MODULES+=" modbus"
   EPICS_MODULES+=" motor"
   ### motor driver modules
   MOTOR_SUBMODULES+=" motorMotorSim"
   #!MOTOR_SUBMODULES+=" motorScriptMotor"
   MOTOR_MODULES+=" motorVMC"
-  ### These are needed for specific motor drivers
-  #!EPICS_MODULES+=" ipac"
-  #!EPICS_MODULES+=" lua"
-  #!EPICS_MODULES+=" modbus"
   ### These are nice things to have in an IOC
   #!EPICS_MODULES+=" alive"
   #!EPICS_MODULES+=" autosave"
-  #1EPICS_MODULES+=" calc"
+  #!EPICS_MODULES+=" calc"
   #!EPICS_MODULES+=" iocStats"
   #!EPICS_MODULES+=" sscan"
   #!EPICS_MODULES+=" std"
@@ -247,6 +248,7 @@ clone() {
               git submodule --quiet update modules/${submodule}
             fi
           fi
+        cd ..
         done
         
         exitDir ${module}
@@ -268,17 +270,17 @@ clone() {
   then
     mkdir tar
 
-    if [ -d "seq-2-2-6" ]; then
-      echo "seq-2-2-6 already exists"
+    if [ -d "seq-2-2-7" ]; then
+      echo "seq-2-2-7 already exists"
     else
-      echo "fetching & extracting seq-2-2-6"
+      echo "fetching & extracting seq-2-2-7"
       # http://www-csr.bessy.de/control/SoftDist/sequencer/Installation.html#download
-      ${WGET} --no-check-certificate --quiet -O tar/seq-2.2.6.tar.gz http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.2.6.tar.gz
+      ${WGET} --no-check-certificate --quiet -O tar/seq-2.2.7.tar.gz http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.2.7.tar.gz
       
       # The synApps build can't handle "."
       #!tar xzvf tar/seq-2.2.4.tar.gz
-      tar xzf tar/seq-2.2.6.tar.gz
-      mv seq-2.2.6 seq-2-2-6
+      tar xzf tar/seq-2.2.7.tar.gz
+      mv seq-2.2.7 seq-2-2-7
     fi
     
     rm -rf tar/
