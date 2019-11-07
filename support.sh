@@ -3,6 +3,9 @@
 # A script to create & maintain a support directory for motor development
 #
 
+# Stuff to customize
+EPICS_BASE=/APSshare/epics/base-3.15.6
+
 setup() {
 
   GITHUB=https://github.com
