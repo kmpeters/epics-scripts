@@ -24,25 +24,19 @@ setup() {
   ### Use the synApps build system to simplify the process of updating RELEASE files
   SYNAPPS_MODULES+=" support"
   SYNAPPS_MODULES+=" configure"
-  # utils is necessary for 'make release' to succeed
-  SYNAPPS_MODULES+=" utils"
-  ### These are required to build motor support
-  EPICS_MODULES+=" asyn"
-  EPICS_MODULES+=" busy"
-  # seq would be here if it was on github
-  ### These are needed for specific motor drivers
-  EPICS_MODULES+=" ipac"
-  EPICS_MODULES+=" lua"
-  EPICS_MODULES+=" modbus"
-  # autosave is needed to build tests in another module
-  EPICS_MODULES+=" autosave"
-  ### These are nice things to have in an IOC
-  EPICS_MODULES+=" calc"
-  EPICS_MODULES+=" sscan"
-  EPICS_MODULES+=" std"
-  #!EPICS_MODULES+=" alive"
-  #!EPICS_MODULES+=" iocStats"
-  ### motor 
+  SYNAPPS_MODULES+=" utils"		# necessary for 'make release to succeed'
+  #!EPICS_MODULES+=" alive"		# generally useful
+  EPICS_MODULES+=" asyn"		# required by motor
+  EPICS_MODULES+=" autosave"	# required for tests in busy ; generally useful
+  EPICS_MODULES+=" busy"		# required by motor
+  EPICS_MODULES+=" calc"		# generally useful
+  EPICS_MODULES+=" ipac"		# required for motorHytec
+  #!EPICS_MODULES+=" iocStats"	# generally useful
+  EPICS_MODULES+=" lua"			# required for motorScriptMotor
+  EPICS_MODULES+=" modbus"		# required for motorAMCI
+  EPICS_MODULES+=" sscan"		# generally useful
+  EPICS_MODULES+=" std"			# generally useful
+  ### motor
   EPICS_MODULES+=" motor"
   ### driver submodules
   MOTOR_SUBMODULES+=" motorMotorSim"
