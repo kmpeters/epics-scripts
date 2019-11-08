@@ -168,6 +168,12 @@ update() {
   exitDir ${1}
 }
 
+extraSpace() {
+  if [ "${FUNC}" == "status" ]; then
+    echo ""
+  fi
+}
+
 # The main routine of the script
 main() {
   # Create module lists
@@ -175,20 +181,25 @@ main() {
   
   ### synApps modules
   for module in ${SYNAPPS_MODULES}; do
+    extraSpace
     ${FUNC} ${module}
   done
 
   ### EPICS modules
   for module in ${EPICS_MODULES}; do
+    extraSpace
     ${FUNC} ${module}
     
     #
     if [ "${module}" == "motor" ]; then
-      # submodules
-      for submodule in ${MOTOR_SUBMODULES}; do
-        ${FUNC} modules/${submodule}
-      done
-      
+      # Only include driver submodules when fetching or displaying the status
+      if [ "${FUNC}" != "update" ]; then
+        # submodules
+        for submodule in ${MOTOR_SUBMODULES}; do
+          extraSpace
+          ${FUNC} modules/${submodule}
+        done
+      fi
       # We need to manually exit the motor dir
       cd ..
     fi
@@ -196,6 +207,7 @@ main() {
 
   ### stand-alone motor modules
   for motor_module in ${MOTOR_MODULES}; do
+    extraSpace
     ${FUNC} ${motor_module}
   done
   
