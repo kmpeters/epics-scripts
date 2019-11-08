@@ -300,6 +300,15 @@ clone() {
 
   echo "done cloning modules"
   
+  # this only needs to be done once, but patterns will be appended to .gitignore every time clone is run
+  echo "updating ignores"
+  for module in asyn cfg ipac lua ${SEQ_DIR}; do
+    echo "${module}/" >> .gitignore
+  done
+  for motor_module in in ${MOTOR_MODULES}; do
+    echo "${motor_module}/" >> .gitignore
+  done
+  
   echo "Creating ${RELEASE_FILE}"
   #
   echo "EPICS_BASE=${EPICS_BASE}" > ${RELEASE_FILE}
