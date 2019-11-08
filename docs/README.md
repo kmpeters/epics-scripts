@@ -5,6 +5,6 @@ The less-fun and more-important part of development.
 
 [makeIOC.sh](makeIOC.md) is a script that makes it easy to quickly generate a clean vxWorks or Linux IOC.
 
-## synApps.sh
+## support.sh
 
-[synApps.sh](synApps.md) is a script that makes it easy to clone (and maintain) the synApps modules from their git repos.
+[support.sh](support.md) is a script that makes it easy to clone (and maintain) the EPICS modules that are required/useful for motor development and testing.
