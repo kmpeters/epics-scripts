@@ -5,14 +5,21 @@
 
 # Stuff to customize
 EPICS_BASE=/APSshare/epics/base-3.15.6
+SEQ_VER=seq-2.2.7
+EPICS_HOST_ARCH=linux-x86_64
 
 setup() {
+
+  # Overwrite the default RELEASE file until the synApps build system improves
+  RELEASE_FILE=configure/RELEASE
 
   GITHUB=https://github.com
 
   SYNAPPS_MODULES=
   EPICS_MODULES=
   AREADETECTOR_MODULES=
+
+  SUPPORT=$(pwd)
 
   ### Use the synApps build system to simplify the process of updating RELEASE files
   SYNAPPS_MODULES+=" support"
@@ -27,19 +34,21 @@ setup() {
   EPICS_MODULES+=" ipac"
   EPICS_MODULES+=" lua"
   EPICS_MODULES+=" modbus"
-  # motor 
+  # autosave is needed to build tests in another module
+  EPICS_MODULES+=" autosave"
+  ### These are nice things to have in an IOC
+  EPICS_MODULES+=" calc"
+  EPICS_MODULES+=" sscan"
+  EPICS_MODULES+=" std"
+  #!EPICS_MODULES+=" alive"
+  #!EPICS_MODULES+=" iocStats"
+  ### motor 
   EPICS_MODULES+=" motor"
-  ### motor driver modules
+  ### driver submodules
   MOTOR_SUBMODULES+=" motorMotorSim"
   #!MOTOR_SUBMODULES+=" motorScriptMotor"
+  ### stand-alone driver modules
   MOTOR_MODULES+=" motorVMC"
-  ### These are nice things to have in an IOC
-  #!EPICS_MODULES+=" alive"
-  #!EPICS_MODULES+=" autosave"
-  #!EPICS_MODULES+=" calc"
-  #!EPICS_MODULES+=" iocStats"
-  #!EPICS_MODULES+=" sscan"
-  #!EPICS_MODULES+=" std"
 }
 
 #
@@ -271,23 +280,55 @@ clone() {
   then
     mkdir tar
 
-    if [ -d "seq-2-2-7" ]; then
-      echo "seq-2-2-7 already exists"
+    SEQ_DIR=${SEQ_VER//./-}
+    echo ${SEQ_DIR} ${SEQ_VER}
+    if [ -d ${SEQ_DIR} ]; then
+      echo "${SEQ_DIR} already exists"
     else
-      echo "fetching & extracting seq-2-2-7"
+      echo "fetching & extracting ${SEQ_DIR}"
       # http://www-csr.bessy.de/control/SoftDist/sequencer/Installation.html#download
-      ${WGET} --no-check-certificate --quiet -O tar/seq-2.2.7.tar.gz http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.2.7.tar.gz
+      ${WGET} --no-check-certificate --quiet -O tar/${SEQ_VER}.tar.gz http://www-csr.bessy.de/control/SoftDist/sequencer/releases/${SEQ_VER}.tar.gz
       
       # The synApps build can't handle "."
-      #!tar xzvf tar/seq-2.2.4.tar.gz
-      tar xzf tar/seq-2.2.7.tar.gz
-      mv seq-2.2.7 seq-2-2-7
+      #!tar xzvf tar/${SEQ_VER}.tar.gz
+      tar xzf tar/${SEQ_VER}.tar.gz
+      mv ${SEQ_VER} ${SEQ_DIR}
     fi
     
     rm -rf tar/
   fi
 
   echo "done cloning modules"
+  
+  echo "Creating ${RELEASE_FILE}"
+  #
+  echo "EPICS_BASE=${EPICS_BASE}" > ${RELEASE_FILE}
+  echo "SUPPORT=${SUPPORT}" >> ${RELEASE_FILE}
+  echo "" >> ${RELEASE_FILE}
+  #
+  ### EPICS modules
+  for module in ${EPICS_MODULES}; do
+    echo "${module^^}=\$(SUPPORT)/${module}" >> ${RELEASE_FILE}
+  done
+  if [[ "${WGET_NOT_FOUND}" == "0" ]]; then
+    echo "SNCSEQ=\$(SUPPORT)/seq-2-2-7" >> ${RELEASE_FILE}
+  fi
+  ###
+  for motor_module in ${MOTOR_MODULES}; do
+    # Append to the support/configure/RELEASE file
+    release_name="${motor_module:0:5}_${motor_module:5}"
+    echo "${release_name^^}=\$(SUPPORT)/${motor_module}" >> ${RELEASE_FILE}
+    # Create a RELEASE.local in the driver module
+    echo "SUPPORT=${SUPPORT}" > ${motor_module}/configure/RELEASE.local
+    echo "include \$(SUPPORT)/configure/RELEASE" >> ${motor_module}/configure/RELEASE.local
+  done
+  echo "" >> ${RELEASE_FILE}
+  
+  # Update the release files of all the modules (until the synApps build system improves)
+  make release
+  # Use a global RELEASE.local file in the support dir--this should work but it doesn't due to circular dependencies
+  #!echo "SUPPORT=${SUPPORT}" > RELEASE.local
+  #!echo "include \$(SUPPORT)/configure/RELEASE" >> RELEASE.local
 }
 
 #!echo ${#}
