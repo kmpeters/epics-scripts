@@ -6,9 +6,9 @@ num_args=$#
 #!echo $num_args
 INDENT="> "
 
-# Default to synApps_5_8 for now
-VER="_5_8"
-CHANGE_PREFIX="changePrefix.pl"
+# Default to synApps_6_1
+VER="_6_1"
+CHANGE_PREFIX="changePrefix"
 
 case $num_args in
   3 )
@@ -22,15 +22,19 @@ case $num_args in
     case $VERSION in 
       "5.8" )
         VER="_5_8"
+        CHANGE_PREFIX="changePrefix.pl"
         ;;
       
       "6.0" )
         VER="_6_0"
-        CHANGE_PREFIX="changePrefix"
+        ;;
+      
+      "6.1" )
+        VER="_6_1"
         ;;
       
       * )
-        echo "Invalid synApps version.  Valid options: 5.8, 6.0"
+        echo "Invalid synApps version.  Valid options: 5.8, 6.0, 6.1"
         exit 1
         ;;
     esac
@@ -41,14 +45,14 @@ case $num_args in
     #!echo "$2"
     OS=$1
     PREFIX=$2
-    # Default to synApps_5_8 for now
-    VER="_5_8"
+    # Default to synApps_6_1 for now
+    VER="_6_1"
     ;;
   
   * )
     echo "Usage: makeIOC.sh <vxWorks|Linux|Darwin|Windows> <ioc_name>"
     echo "or"
-    echo "Usage: makeiOC.sh <vxWorks|Linux|Darwin|Windows> <5.8|6.0> <ioc_name>"
+    echo "Usage: makeiOC.sh <vxWorks|Linux|Darwin|Windows> <5.8|6.0|6.1> <ioc_name>"
     exit 1
     ;;
 esac
@@ -59,6 +63,12 @@ then
   echo "\"${OS}\" is not a valid OS choice. Choose vxWorks, Linux, Darwin or Windows."
   exit 1
 else
+  # Check for invalid Darwin versions
+  if [ "${OS}" == "Darwin" ] && [ "${VER}" != "_5_8" ]
+  then
+    echo "Darwin is only available for synApps 5.8"
+    exit 1
+  fi
   BRANCH_OS="${OS}${VER}"
 fi
 
