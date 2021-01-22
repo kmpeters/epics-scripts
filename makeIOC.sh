@@ -6,8 +6,8 @@ num_args=$#
 #!echo $num_args
 INDENT="> "
 
-# Default to synApps_6_1
-VER="_6_1"
+# Default to synApps_6_2
+VER="_6_2"
 CHANGE_PREFIX="changePrefix"
 
 case $num_args in
@@ -33,8 +33,12 @@ case $num_args in
         VER="_6_1"
         ;;
       
+      "6.2" )
+        VER="_6_2"
+        ;;
+      
       * )
-        echo "Invalid synApps version.  Valid options: 5.8, 6.0, 6.1"
+        echo "Invalid synApps version.  Valid options: 6.2, 6.1, 6.0, 5.8"
         exit 1
         ;;
     esac
@@ -45,14 +49,14 @@ case $num_args in
     #!echo "$2"
     OS=$1
     PREFIX=$2
-    # Default to synApps_6_1 for now
-    VER="_6_1"
+    # Default to synApps_6_2 for now
+    VER="_6_2"
     ;;
   
   * )
     echo "Usage: makeIOC.sh <vxWorks|Linux|Darwin|Windows> <ioc_name>"
     echo "or"
-    echo "Usage: makeiOC.sh <vxWorks|Linux|Darwin|Windows> <5.8|6.0|6.1> <ioc_name>"
+    echo "Usage: makeiOC.sh <vxWorks|Linux|Darwin|Windows> <5.8|6.0|6.1|6.2> <ioc_name>"
     exit 1
     ;;
 esac
