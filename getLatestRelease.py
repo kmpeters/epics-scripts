@@ -47,12 +47,12 @@ def get_latest_release(user=None, repo=None, tag=None, latest=False, token=None,
   releases_url = "{0}/releases".format(repo_url)
   tags_url = "{0}/tags".format(repo_url)
   
-  print(releases_url)
+  #print(releases_url)
   
   latest_release = None
   
   releases = doRequest(releases_url, headers)
-  pPrint(releases)
+  #pPrint(releases)
   for release in releases:
     #!print_release_info(release, repo, save=False)
     
@@ -71,7 +71,7 @@ def get_latest_release(user=None, repo=None, tag=None, latest=False, token=None,
         latest_release = tag["name"]
         break
 
-  print(latest_release)
+  return latest_release
 
 def main(options):
   # Assume the user will always specify valid user and repo values
@@ -79,7 +79,8 @@ def main(options):
   repo = options.github_repo
   
   # Do the stuff
-  get_latest_release(user=user, repo=repo, quiet=False)
+  latest_release = get_latest_release(user=user, repo=repo, quiet=False)
+  print(latest_release)
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser("getReleases.py")
