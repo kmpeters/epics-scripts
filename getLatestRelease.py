@@ -11,8 +11,11 @@ import urllib.request as urllib2
 
 def doRequest(url, headers={"Accept": "application/vnd.github.v3+json"}):
   request = urllib2.Request(url, headers=headers)
-  response = urllib2.urlopen(request).read().decode("utf-8")
-  parsed = json.loads(response)
+  try:
+    response = urllib2.urlopen(request).read().decode("utf-8")
+    parsed = json.loads(response)
+  except:
+    parsed = {}
   return parsed
 
 def pPrint(parsed):
