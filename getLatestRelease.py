@@ -28,6 +28,10 @@ def getGithubToken():
     token = None
   return token
 
+def isVersionNum(release):
+  # Assume any release name that has 1-4 '.' or '-' in it and NO spaces is a valid version number
+  return ((release.count('-') > 0 and release.count('-') < 5) or (release.count('.') > 0 and release.count('.'))) and (release.count(' ') == 0)
+
 def get_latest_release(user=None, repo=None, tag=None, latest=False, token=None, quiet=False):
   #
   
@@ -43,17 +47,17 @@ def get_latest_release(user=None, repo=None, tag=None, latest=False, token=None,
   releases_url = "{0}/releases".format(repo_url)
   tags_url = "{0}/tags".format(repo_url)
   
-  #print(releases_url)
+  print(releases_url)
   
   latest_release = None
   
   releases = doRequest(releases_url, headers)
-  #pPrint(releases)
+  pPrint(releases)
   for release in releases:
     #!print_release_info(release, repo, save=False)
     
     # Assume the first release that starts with 'R' is the latest release 
-    if release["name"][0] == 'R':
+    if isVersionNum(release["name"]):
       latest_release = release["name"]
       break
   
@@ -63,7 +67,7 @@ def get_latest_release(user=None, repo=None, tag=None, latest=False, token=None,
     
     for tag in tags:
       # Assume the first tag that starts with 'R' is the latest release
-      if tag["name"][0] == 'R':
+      if isVersionNum(tag["name"]):
         latest_release = tag["name"]
         break
 
