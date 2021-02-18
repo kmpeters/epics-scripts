@@ -89,12 +89,12 @@ git clone https://github.com/kmpeters/xxx.git -b ${BRANCH_OS} ${PREFIX}
 
 cd ${PREFIX}
 
-echo "Switching to local deployed branch..."
-git checkout -b deployed
-
-
 echo "${INDENT}Changing IOC prefix..."
 ./${CHANGE_PREFIX} xxx ${PREFIX}
+
+# Remove the changePrefix.pl script
+echo "${INDENT}Removing ${CHANGE_PREFIX}..."
+rm ${CHANGE_PREFIX}
 
 # Workaround for strange changePrefix.pl behavior on Windows
 if [ "${OS}" == "Windows" ]
@@ -110,15 +110,16 @@ then
   mv iocBoot/ioc${OS} iocBoot/ioc${PREFIX}
 fi
 
-# Add renamed directories/files to git
-git add iocBoot/ioc${PREFIX}
-git add *${PREFIX}*
+# Create a fresh git repo
+echo "${INDENT}Creating a fresh git repo..."
+rm -rf .git/
+git init
 
-# Remove the changePrefix.pl script
-echo "${INDENT}Removing ${CHANGE_PREFIX}..."
-git rm ${CHANGE_PREFIX}
+# Add files to git
+echo "${INDENT}Adding files..."
+git add .
 
-echo "${INDENT}Commiting changes to deployed branch..."
+echo "${INDENT}Commiting changes..."
 git commit -am "Initial commit of ${PREFIX} after running ${CHANGE_PREFIX}"
 
 cd ..
