@@ -51,6 +51,18 @@ def remove_dir(path, save=None):
             else:
                 remove_file(fp)
 
+def createMotorIocsh(iocName):
+    #
+    newDir = 'iocBoot/ioc{}/iocsh'.format(iocName)
+    if not os.path.exists(newDir):
+        os.mkdir(newDir)
+    
+    if os.path.exists('iocBoot/ioc{}/examples/motors.iocsh'.format(iocName)):
+        #
+        os.system('grep -v "traj\|pseudo" iocBoot/ioc{}/examples/motors.iocsh | sed -e "s/^dbLoad/#dbLoad/g" > {}/motors.iocsh'.format(iocName, newDir, iocName))
+        #!os.system('git add {}'.format(newDir))
+        print('git add {}'.format(newDir))
+
 def deleteCommonFiles(iocName):
     filesToDelete = ['LICENSE', 'README', 'README.md', 'start_putrecorder',
         'iocBoot/accessSecurity.acf',
@@ -118,6 +130,9 @@ def main(options):
     iocName = os.path.basename(cwd)
     
     if iocDirCheck(cwd, iocName):
+        #
+        createMotorIocsh(iocName)
+        
         #
         deleteCommonFiles(iocName)
         
