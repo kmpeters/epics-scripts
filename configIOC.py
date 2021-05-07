@@ -8,6 +8,19 @@ import sys
 import argparse
 
 
+def iocDirCheck(pwd, iocName):
+    iocDir = True
+    
+    shouldExist = ('configure', '{}App'.format(iocName),
+        'iocBoot', 'Makefile')
+    
+    for thing in shouldExist:
+        path = "{}/{}".format(pwd, thing)
+        if not os.path.exists(thing):
+            iocDir = False
+    
+    return iocDir
+
 def remove_file(path):
     if os.path.isfile(path):
         #!os.system("git rm -f {}".format(path))
@@ -75,16 +88,19 @@ def deleteCommonFiles(iocName):
         remove_dir(dp, filesToKeep)
 
 def main(options):
-    print(options)
+    #print(options)
     
-    pwd = os.getcwd()
+    cwd = os.getcwd()
     
     # Assume the following:
     #  1. The name of the IOC's top-level directory is the name of the IOC
-    iocName = os.path.basename(pwd)
+    iocName = os.path.basename(cwd)
     
-    deleteCommonFiles(iocName)
-    
+    if iocDirCheck(cwd, iocName):
+        #
+        deleteCommonFiles(iocName)
+    else:
+        print("{} is not an IOC dir".format(cwd))
     
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("configIOC.py")
