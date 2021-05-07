@@ -87,6 +87,27 @@ def deleteCommonFiles(iocName):
     for dp in dirsToDelete:
         remove_dir(dp, filesToKeep)
 
+def patchCommonIocsh(iocName):
+    #
+    lineSubstitutions = {
+        'iocshLoad("$(AUTOSAVE)/iocsh/autosave_settings.iocsh", "PREFIX=$(PREFIX), SAVE_PATH=$(TOP)/iocBoot/$(IOC)")\n' : 'iocshLoad("$(AUTOSAVE)/iocsh/autosave_settings.iocsh", "PREFIX=$(PREFIX), SAVE_PATH=$(TOP)/iocBoot/$(IOC), NUM_SEQ=12, SEQ_PERIOD=43200")\n',
+        'set_requestfile_path("$(TOP)/db")\n' : 'set_requestfile_path("$(TOP)/db")\nset_requestfile_path("$(TOP)/xxxApp/Db")\n',
+        'dbLoadRecords("$(ALIVE)/aliveApp/Db/aliveMSGCalc.db", "P=$(PREFIX)")\n' : 'dbLoadRecords("$(ALIVE)/aliveApp/Db/aliveMSGCalc.db", "P=$(PREFIX)")\n\n# Miscellaneous PV\'s, such as burtResult\ndbLoadRecords("$(STD)/stdApp/Db/misc.db","P=$(PREFIX)")\n\n'
+    }
+    linesToSub = lineSubstitutions.keys()
+    
+    with open('iocBoot/ioc{}/common.iocsh'.format(iocName), 'r') as fh:
+        contents = fh.readlines()
+        print(contents)
+    
+    # TODO: overwrite the original file
+    with open('iocBoot/ioc{}/common.iocsh.new'.format(iocName), 'w') as fh:
+        for line in contents:
+            if line in linesToSub:
+                fh.write(lineSubstitutions[line])
+            else:
+                fh.write(line)
+
 def main(options):
     #print(options)
     
@@ -99,6 +120,9 @@ def main(options):
     if iocDirCheck(cwd, iocName):
         #
         deleteCommonFiles(iocName)
+        
+        #
+        patchCommonIocsh(iocName)
     else:
         print("{} is not an IOC dir".format(cwd))
     
