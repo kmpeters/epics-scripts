@@ -63,6 +63,11 @@ def createMotorIocsh(iocName):
         #!os.system('git add {}'.format(newDir))
         print('git add {}'.format(newDir))
 
+    # This should eventually move to after deleteCommonFiles()
+    for fn in os.listdir("iocBoot/ioc{}".format(iocName)):
+        if 'st.cmd' in fn:
+            print(fn)
+
 def deleteCommonFiles(iocName):
     filesToDelete = ['LICENSE', 'README', 'README.md', 'start_putrecorder',
         'iocBoot/accessSecurity.acf',
@@ -120,8 +125,37 @@ def patchCommonIocsh(iocName):
             else:
                 fh.write(line)
 
+def configureLinux(iocName):
+    #
+    filesToDelete = [ 'iocBoot/nfsCommands', 
+                      'iocBoot/ioc{}/st.cmd.Win32'.format(iocName), 
+                      'iocBoot/ioc{}/st.cmd.Win64'.format(iocName),
+                      'iocBoot/ioc{}/st.cmd.vxWorks'.format(iocName),
+        ]
+
+    #
+    for fp in filesToDelete:
+        remove_file(fp)
+
+    if os.path.exists('iocBoot/ioc{}/Makefile'.format(iocName)):
+        #
+        os.system("grep -v 'win\|vxWorks\|cdCommands\|dllPath' iocBoot/ioc{}/Makefile | sed -e 's/^ARCH = linux-x86_64/ARCH = linux-x86_64\\\n#ARCH = linux-x86_64-debug/g' > iocBoot/ioc{}/Makefile.new".format(iocName, iocName))
+        #!os.system('git add iocBoot/ioc{}/Makefile'.format(iocName))
+        print('git add iocBoot/ioc{}/Makefile'.format(iocName))
+
+    #
+    if os.path.exists('configure/CONFIG_SITE'):
+        #
+        os.system("sed -e 's/^#CROSS_COMPILER_TARGET_ARCHS = vxWorks-68040/CROSS_COMPILER_TARGET_ARCHS = /g' configure/CONFIG_SITE > configure/CONFIG_SITE.new")
+        #!os.system('git add configure/CONFIG_SITE')
+        print('git add configure/CONFIG_SITE')
+
+def patchStCmd(iocName):
+    #
+    pass
+
 def main(options):
-    #print(options)
+    print(options)
     
     cwd = os.getcwd()
     
@@ -138,6 +172,14 @@ def main(options):
         
         #
         patchCommonIocsh(iocName)
+        
+        #
+        if (options.os == 'linux'):
+            configureLinux(iocName)
+        elif (options.os == 'windows'):
+            configureWindows(iocName)
+        elif (options.os == 'vxWorks'):
+            configureVxWorks(iocName)
     else:
         print("{} is not an IOC dir".format(cwd))
     
