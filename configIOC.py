@@ -115,7 +115,7 @@ def patchCommonIocsh(iocName):
     
     with open('iocBoot/ioc{}/common.iocsh'.format(iocName), 'r') as fh:
         contents = fh.readlines()
-        print(contents)
+        #print(contents)
     
     # TODO: overwrite the original file
     with open('iocBoot/ioc{}/common.iocsh.new'.format(iocName), 'w') as fh:
@@ -149,6 +149,73 @@ def configureLinux(iocName):
         os.system("sed -e 's/^#CROSS_COMPILER_TARGET_ARCHS = vxWorks-68040/CROSS_COMPILER_TARGET_ARCHS = /g' configure/CONFIG_SITE > configure/CONFIG_SITE.new")
         #!os.system('git add configure/CONFIG_SITE')
         print('git add configure/CONFIG_SITE')
+
+def configureVxWorks(iocName):
+    #
+    filesToDelete = [ 'iocBoot/ioc{}/st.cmd.Win32'.format(iocName), 
+                      'iocBoot/ioc{}/st.cmd.Win64'.format(iocName),
+                      'iocBoot/ioc{}/st.cmd.Linux'.format(iocName),
+        ]
+
+    dirsToDelete = ['iocBoot/ioc{}/softioc'.format(iocName), ]
+
+    #
+    for fp in filesToDelete:
+        remove_file(fp)
+
+    for dp in dirsToDelete:
+        remove_dir(dp)
+
+    # Update nfsCommands
+    linesToAdd = [ 'nfsMount("s100dserv","/xorApps","/xorApps")\n',
+                   'nfsMount("s100dserv","/xorApps","/net/s100dserv/xorApps")\n',
+                   '#!nfsMount("s100dserv","/export/beams","/home/beams")\n',
+                   '\n',
+                   '#!hostAdd(("aquila","164.54.100.16")\n',
+                   '#!nfsMount("aquila","/export/beams3","/home/beams3")\n',
+    ]
+
+    with open('iocBoot/nfsCommands', 'r') as fh:
+        contents = fh.readlines()
+        #print(contents)
+    
+    # TODO: overwrite the original file
+    with open('iocBoot/nfsCommands.new', 'w') as fh:
+        for line in contents:
+            if 'oxygen' in line:
+                continue
+            if 'mooney' in line:
+                continue
+            if line == 'nfsMount("s100dserv","/APSshare","/APSshare")\n':
+                fh.write(line)
+                for nl in linesToAdd:
+                    fh.write(nl)
+            else:
+                fh.write(line)
+
+    #
+    with open("iocBoot/ioc{}/Makefile".format(iocName), 'r') as fh:
+        contents = fh.readlines()
+        #print(contents)
+
+    patternsToExclude = ['win', 'linux', 'envPaths']
+    lineSubstitutions = { '#ARCH = vxWorks-ppc32\n' : 'ARCH = vxWorks-ppc32\n#ARCH = vxWorks-ppc32-debug\n',
+                       '#TARGETS = cdCommands\n' : 'TARGETS = cdCommands\n',
+    }
+    linesToReplace = lineSubstitutions.keys()
+
+    with open('iocBoot/ioc{}/Makefile.new'.format(iocName), 'w') as fh:
+        for line in contents:
+            if line in linesToReplace:
+                fh.write(lineSubstitutions[line])
+            else:
+                ignore = False
+                for pattern in patternsToExclude:
+                    if pattern in line:
+                        ignore = True
+                        break
+                if not ignore:
+                    fh.write(line)
 
 def patchStCmd(iocName):
     #
