@@ -217,6 +217,76 @@ def configureVxWorks(iocName):
                 if not ignore:
                     fh.write(line)
 
+def configureWindows(iocName):
+    #
+    filesToDelete = [ 'iocBoot/nfsCommands'.format(iocName), 
+                      'iocBoot/ioc{}/st.cmd.vxWorks'.format(iocName),
+                      'iocBoot/ioc{}/st.cmd.Linux'.format(iocName),
+        ]
+
+    dirsToDelete = ['iocBoot/ioc{}/softioc'.format(iocName), ]
+
+    #
+    for fp in filesToDelete:
+        remove_file(fp)
+
+    for dp in dirsToDelete:
+        remove_dir(dp)
+
+    # Create batch files
+    batchFileSkeleton = """@echo OFF
+
+SETLOCAL
+
+REM This should match an existing subdirectory of the IOC's bin dir
+set EPICS_HOST_ARCH={}
+
+REM set EPICS_CA_MAX_ARRAY_BYTES=100000000
+
+REM Add caRepeater to the PATH
+REM set PATH=%PATH%;D:/epics/base-3.15.5/bin/%EPICS_HOST_ARCH%
+
+REM Go to the startup directory
+cd %~dp0
+
+REM dlls to the PATH
+call dllPath.bat
+
+REM start the IOC
+..\\..\\bin\\%EPICS_HOST_ARCH%\\xxx st.cmd.{}
+
+pause
+
+ENDLOCAL"""
+    with open('iocBoot/ioc{}/start_ioc.Win32.bat'.format(iocName), 'w') as fh:
+        fh.write(batchFileSkeleton.format("win32-x86-static", "Win32"))
+    with open('iocBoot/ioc{}/start_ioc.Win64.bat'.format(iocName), 'w') as fh:
+        fh.write(batchFileSkeleton.format("windows-x64-static", "Win64"))
+
+    # Modify Makefile
+    patternsToExclude = ['vxWorks', 'linux', 'cdCommands', 'envPaths\n', 'cyg' ]
+    lineSubstitutions = { '#ARCH = windows-x64-static\n' : 'ARCH = windows-x64-static\n',
+                       '#ARCH = win32-x86\n' : '#ARCH = win32-x86-static\n#ARCH = win32-x86-debug\n#ARCH = win32-x86\n',
+                       '#TARGETS = envPaths dllPath.bat\n' : 'TARGETS = envPaths dllPath.bat\n',
+    }
+    linesToReplace = lineSubstitutions.keys()
+
+    with open('iocBoot/ioc{}/Makefile'.format(iocName), 'r') as fh:
+        contents = fh.readlines()
+    
+    with open('iocBoot/ioc{}/Makefile.new'.format(iocName), 'w') as fh:
+        for line in contents:
+            if line in linesToReplace:
+                fh.write(lineSubstitutions[line])
+            else:
+                ignore = False
+                for pattern in patternsToExclude:
+                    if pattern in line:
+                        ignore = True
+                        break
+                if not ignore:
+                    fh.write(line)
+
 def patchStCmd(iocName):
     #
     pass
