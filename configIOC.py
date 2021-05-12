@@ -287,9 +287,22 @@ ENDLOCAL"""
                 if not ignore:
                     fh.write(line)
 
-def patchStCmd(iocName):
+def includeMotorIocsh(iocName):
     #
-    pass
+    lineSubstitutions = { '< common.iocsh\n' : '< common.iocsh\n\n< iocsh/motors.iocsh\n',
+    }
+    linesToReplace = lineSubstitutions.keys()
+
+    for fn in os.listdir('iocBoot/ioc{}'.format(iocName)):
+        if 'st.cmd' in fn:
+            with open("iocBoot/ioc{}/{}".format(iocName, fn), 'r') as fh:
+                contents = fh.readlines()
+            with open("iocBoot/ioc{}/{}.new".format(iocName, fn), 'w') as fh:
+                for line in contents:
+                    if line in linesToReplace:
+                        fh.write(lineSubstitutions[line])
+                    else:
+                        fh.write(line)
 
 def main(options):
     print(options)
@@ -317,6 +330,9 @@ def main(options):
             configureWindows(iocName)
         elif (options.os == 'vxWorks'):
             configureVxWorks(iocName)
+
+        #
+        includeMotorIocsh(iocName)
     else:
         print("{} is not an IOC dir".format(cwd))
     
