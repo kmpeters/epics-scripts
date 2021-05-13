@@ -63,22 +63,55 @@ def make_dir(path):
     if not os.path.exists(path):
         os.mkdir(path)
 
+def modifyFile(inFileName, outFileName=None, patternsToExclude=None, lineSubstitutions=None):
+    if os.path.exists(inFileName):
+        # Create a .new output file none is specified
+        if outFileName == None:
+            outFileName = "{}.new".format(inFileName)
+
+        # Read the contents of the file
+        with open(inFileName, 'r') as fh:
+            contents = fh.readlines()
+
+        # Determine which lines need to be replaced
+        if lineSubstitutions == None:
+            linesToReplace = None
+        else:
+            linesToReplace = lineSubstitutions.keys()
+        
+        # Write the modified contents to the output file
+        with open(outFileName, 'w') as fh:
+            for line in contents:
+                if linesToReplace != None and line in linesToReplace:
+                    if type(lineSubstitutions[line]) == list:
+                        fh.write("".join(lineSubstitutions[line]))
+                    else:
+                        fh.write(lineSubstitutions[line])
+                else:
+                    ignore = False
+                    if patternsToExclude != None:
+                        for pattern in patternsToExclude:
+                            if pattern in line:
+                                ignore = True
+                                break
+                    if not ignore:
+                        fh.write(line)
+    else:
+        print("Error: {} does not exist".format(inFileName))
+
 def createMotorIocsh(iocName):
     #
     newDir = 'iocBoot/ioc{}/iocsh'.format(iocName)
     make_dir(newDir)
     
-    if os.path.exists('iocBoot/ioc{}/examples/motors.iocsh'.format(iocName)):
-        #
-        os.system('grep -v "traj\|pseudo" iocBoot/ioc{}/examples/motors.iocsh | sed -e "s/^dbLoad/#dbLoad/g" > {}/motors.iocsh'.format(iocName, newDir, iocName))
-        #!os.system('git add {}'.format(newDir))
-        print('git add {}'.format(newDir))
-
-    # This should eventually move to after deleteCommonFiles()
-    # TODO: figure out why I added this
-    for fn in os.listdir("iocBoot/ioc{}".format(iocName)):
-        if 'st.cmd' in fn:
-            print(fn)
+    inFileName = 'iocBoot/ioc{}/examples/motors.iocsh'.format(iocName)
+    outFileName = '{}/motors.iocsh'.format(newDir)
+    patternsToExclude = ['traj', 'pseudo']
+    lineSubstitutions = { 'dbLoadTemplate("substitutions/motor.substitutions", "P=$(PREFIX)")\n': '#dbLoadTemplate("substitutions/motor.substitutions", "P=$(PREFIX)")\n'}
+    modifyFile(inFileName, outFileName, patternsToExclude, lineSubstitutions)
+    
+    #!os.system('git add {}'.format(newDir))
+    print('git add {}'.format(newDir))
 
 def deleteCommonFiles(iocName):
     filesToDelete = ['LICENSE', 'README', 'README.md', 'start_putrecorder',
@@ -115,25 +148,15 @@ def deleteCommonFiles(iocName):
 
 def patchCommonIocsh(iocName):
     #
+    inFileName = 'iocBoot/ioc{}/common.iocsh'.format(iocName)
     lineSubstitutions = {
         'iocshLoad("$(AUTOSAVE)/iocsh/autosave_settings.iocsh", "PREFIX=$(PREFIX), SAVE_PATH=$(TOP)/iocBoot/$(IOC)")\n' : 'iocshLoad("$(AUTOSAVE)/iocsh/autosave_settings.iocsh", "PREFIX=$(PREFIX), SAVE_PATH=$(TOP)/iocBoot/$(IOC), NUM_SEQ=12, SEQ_PERIOD=43200")\n',
         'set_requestfile_path("$(TOP)/db")\n' : 'set_requestfile_path("$(TOP)/db")\nset_requestfile_path("$(TOP)/xxxApp/Db")\n',
         'dbLoadRecords("$(ALIVE)/aliveApp/Db/aliveMSGCalc.db", "P=$(PREFIX)")\n' : 'dbLoadRecords("$(ALIVE)/aliveApp/Db/aliveMSGCalc.db", "P=$(PREFIX)")\n\n# Miscellaneous PV\'s, such as burtResult\ndbLoadRecords("$(STD)/stdApp/Db/misc.db","P=$(PREFIX)")\n\n'
     }
-    linesToSub = lineSubstitutions.keys()
     
-    with open('iocBoot/ioc{}/common.iocsh'.format(iocName), 'r') as fh:
-        contents = fh.readlines()
-        #print(contents)
+    modifyFile(inFileName, lineSubstitutions=lineSubstitutions)
     
-    # TODO: overwrite the original file
-    with open('iocBoot/ioc{}/common.iocsh.new'.format(iocName), 'w') as fh:
-        for line in contents:
-            if line in linesToSub:
-                fh.write(lineSubstitutions[line])
-            else:
-                fh.write(line)
-
 def configureLinux(iocName):
     #
     filesToDelete = [ 'iocBoot/nfsCommands', 
@@ -144,18 +167,20 @@ def configureLinux(iocName):
 
     remove_files(filesToDelete)
 
-    if os.path.exists('iocBoot/ioc{}/Makefile'.format(iocName)):
-        #
-        os.system("grep -v 'win\|vxWorks\|cdCommands\|dllPath' iocBoot/ioc{}/Makefile | sed -e 's/^ARCH = linux-x86_64/ARCH = linux-x86_64\\\n#ARCH = linux-x86_64-debug/g' > iocBoot/ioc{}/Makefile.new".format(iocName, iocName))
-        #!os.system('git add iocBoot/ioc{}/Makefile'.format(iocName))
-        print('git add iocBoot/ioc{}/Makefile'.format(iocName))
+    inFileName = 'iocBoot/ioc{}/Makefile'.format(iocName)
+    patternsToExclude = ['win', 'vxWorks', 'cdCommands', 'dllPath']
+    lineSubstitutions = { 'ARCH = linux-x86_64\n' : ['ARCH = linux-x86_64\n', '#ARCH = linux-x86_64-debug\n'] }
+    modifyFile(inFileName, patternsToExclude=patternsToExclude, lineSubstitutions=lineSubstitutions)
 
-    #
-    if os.path.exists('configure/CONFIG_SITE'):
-        #
-        os.system("sed -e 's/^#CROSS_COMPILER_TARGET_ARCHS = vxWorks-68040/CROSS_COMPILER_TARGET_ARCHS = /g' configure/CONFIG_SITE > configure/CONFIG_SITE.new")
-        #!os.system('git add configure/CONFIG_SITE')
-        print('git add configure/CONFIG_SITE')
+    #!os.system('git add {}'.format(inFileName))
+    print('git add {}'.format(inFileName))
+
+    inFileName = 'configure/CONFIG_SITE'
+    lineSubstitutions = { '#CROSS_COMPILER_TARGET_ARCHS = vxWorks-68040\n' : 'CROSS_COMPILER_TARGET_ARCHS = \n' }
+    modifyFile(inFileName, lineSubstitutions=lineSubstitutions)
+
+    #!os.system('git add {}'.format(inFileName))
+    print('git add {}'.format(inFileName))
 
 def configureVxWorks(iocName):
     #
@@ -171,55 +196,26 @@ def configureVxWorks(iocName):
     remove_dirs(dirsToDelete)
 
     # Update nfsCommands
-    linesToAdd = [ 'nfsMount("s100dserv","/xorApps","/xorApps")\n',
+    inFileName = 'iocBoot/nfsCommands'
+    patternsToExclude = ['oxygen', 'mooney']
+    lineSubstitutions = { 'nfsMount("s100dserv","/APSshare","/APSshare")\n' : [ 
+                   'nfsMount("s100dserv","/APSshare","/APSshare")\n',
+                   'nfsMount("s100dserv","/xorApps","/xorApps")\n',
                    'nfsMount("s100dserv","/xorApps","/net/s100dserv/xorApps")\n',
                    '#!nfsMount("s100dserv","/export/beams","/home/beams")\n',
                    '\n',
                    '#!hostAdd(("aquila","164.54.100.16")\n',
-                   '#!nfsMount("aquila","/export/beams3","/home/beams3")\n',
-    ]
+                   '#!nfsMount("aquila","/export/beams3","/home/beams3")\n']
+    }
+    modifyFile(inFileName, patternsToExclude=patternsToExclude, lineSubstitutions=lineSubstitutions)
 
-    with open('iocBoot/nfsCommands', 'r') as fh:
-        contents = fh.readlines()
-        #print(contents)
-    
-    # TODO: overwrite the original file
-    with open('iocBoot/nfsCommands.new', 'w') as fh:
-        for line in contents:
-            if 'oxygen' in line:
-                continue
-            if 'mooney' in line:
-                continue
-            if line == 'nfsMount("s100dserv","/APSshare","/APSshare")\n':
-                fh.write(line)
-                for nl in linesToAdd:
-                    fh.write(nl)
-            else:
-                fh.write(line)
-
-    #
-    with open("iocBoot/ioc{}/Makefile".format(iocName), 'r') as fh:
-        contents = fh.readlines()
-        #print(contents)
-
+    # Update Makefile
+    inFileName = 'iocBoot/ioc{}/Makefile'.format(iocName)
     patternsToExclude = ['win', 'linux', 'envPaths']
-    lineSubstitutions = { '#ARCH = vxWorks-ppc32\n' : 'ARCH = vxWorks-ppc32\n#ARCH = vxWorks-ppc32-debug\n',
+    lineSubstitutions = { '#ARCH = vxWorks-ppc32\n' : ['ARCH = vxWorks-ppc32\n', '#ARCH = vxWorks-ppc32-debug\n'],
                        '#TARGETS = cdCommands\n' : 'TARGETS = cdCommands\n',
     }
-    linesToReplace = lineSubstitutions.keys()
-
-    with open('iocBoot/ioc{}/Makefile.new'.format(iocName), 'w') as fh:
-        for line in contents:
-            if line in linesToReplace:
-                fh.write(lineSubstitutions[line])
-            else:
-                ignore = False
-                for pattern in patternsToExclude:
-                    if pattern in line:
-                        ignore = True
-                        break
-                if not ignore:
-                    fh.write(line)
+    modifyFile(inFileName, patternsToExclude=patternsToExclude, lineSubstitutions=lineSubstitutions)
 
 def configureWindows(iocName):
     #
@@ -265,45 +261,23 @@ ENDLOCAL"""
         fh.write(batchFileSkeleton.format("windows-x64-static", "Win64"))
 
     # Modify Makefile
+    inFileName = 'iocBoot/ioc{}/Makefile'.format(iocName)
     patternsToExclude = ['vxWorks', 'linux', 'cdCommands', 'envPaths\n', 'cyg' ]
     lineSubstitutions = { '#ARCH = windows-x64-static\n' : 'ARCH = windows-x64-static\n',
                        '#ARCH = win32-x86\n' : '#ARCH = win32-x86-static\n#ARCH = win32-x86-debug\n#ARCH = win32-x86\n',
                        '#TARGETS = envPaths dllPath.bat\n' : 'TARGETS = envPaths dllPath.bat\n',
     }
-    linesToReplace = lineSubstitutions.keys()
-
-    with open('iocBoot/ioc{}/Makefile'.format(iocName), 'r') as fh:
-        contents = fh.readlines()
-    
-    with open('iocBoot/ioc{}/Makefile.new'.format(iocName), 'w') as fh:
-        for line in contents:
-            if line in linesToReplace:
-                fh.write(lineSubstitutions[line])
-            else:
-                ignore = False
-                for pattern in patternsToExclude:
-                    if pattern in line:
-                        ignore = True
-                        break
-                if not ignore:
-                    fh.write(line)
+    modifyFile(inFileName, patternsToExclude=patternsToExclude, lineSubstitutions=lineSubstitutions)
 
 def includeMotorIocsh(iocName):
     #
-    lineSubstitutions = { '< common.iocsh\n' : '< common.iocsh\n\n< iocsh/motors.iocsh\n',
-    }
-    linesToReplace = lineSubstitutions.keys()
+    lineSubstitutions = { '< common.iocsh\n' : '< common.iocsh\n\n< iocsh/motors.iocsh\n'}
+    startupDir = 'iocBoot/ioc{}'.format(iocName)
 
-    for fn in os.listdir('iocBoot/ioc{}'.format(iocName)):
+    for fn in os.listdir(startupDir):
         if 'st.cmd' in fn:
-            with open("iocBoot/ioc{}/{}".format(iocName, fn), 'r') as fh:
-                contents = fh.readlines()
-            with open("iocBoot/ioc{}/{}.new".format(iocName, fn), 'w') as fh:
-                for line in contents:
-                    if line in linesToReplace:
-                        fh.write(lineSubstitutions[line])
-                    else:
-                        fh.write(line)
+            inFileName = "{}/{}".format(startupDir, fn)
+            modifyFile(inFileName, lineSubstitutions=lineSubstitutions)
 
 def main(options):
     print(options)
