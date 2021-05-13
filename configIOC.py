@@ -28,6 +28,10 @@ def remove_file(path):
     else:
         print("{} is not a file".format(path))
 
+def remove_files(fileList):
+    for fp in fileList:
+        remove_file(fp)
+
 def remove_dir(path, save=None):
     deleteEntireDir = True
     
@@ -51,11 +55,18 @@ def remove_dir(path, save=None):
             else:
                 remove_file(fp)
 
+def remove_dirs(dirList):
+    for dp in dirList:
+        remove_dir(dp)
+
+def make_dir(path):
+    if not os.path.exists(path):
+        os.mkdir(path)
+
 def createMotorIocsh(iocName):
     #
     newDir = 'iocBoot/ioc{}/iocsh'.format(iocName)
-    if not os.path.exists(newDir):
-        os.mkdir(newDir)
+    make_dir(newDir)
     
     if os.path.exists('iocBoot/ioc{}/examples/motors.iocsh'.format(iocName)):
         #
@@ -64,6 +75,7 @@ def createMotorIocsh(iocName):
         print('git add {}'.format(newDir))
 
     # This should eventually move to after deleteCommonFiles()
+    # TODO: figure out why I added this
     for fn in os.listdir("iocBoot/ioc{}".format(iocName)):
         if 'st.cmd' in fn:
             print(fn)
@@ -98,11 +110,8 @@ def deleteCommonFiles(iocName):
     
     ]
     
-    for fp in filesToDelete:
-        remove_file(fp)
-    
-    for dp in dirsToDelete:
-        remove_dir(dp, filesToKeep)
+    remove_files(filesToDelete)
+    remove_dirs(dirsToDelete)
 
 def patchCommonIocsh(iocName):
     #
@@ -133,9 +142,7 @@ def configureLinux(iocName):
                       'iocBoot/ioc{}/st.cmd.vxWorks'.format(iocName),
         ]
 
-    #
-    for fp in filesToDelete:
-        remove_file(fp)
+    remove_files(filesToDelete)
 
     if os.path.exists('iocBoot/ioc{}/Makefile'.format(iocName)):
         #
@@ -160,11 +167,8 @@ def configureVxWorks(iocName):
     dirsToDelete = ['iocBoot/ioc{}/softioc'.format(iocName), ]
 
     #
-    for fp in filesToDelete:
-        remove_file(fp)
-
-    for dp in dirsToDelete:
-        remove_dir(dp)
+    remove_files(filesToDelete)
+    remove_dirs(dirsToDelete)
 
     # Update nfsCommands
     linesToAdd = [ 'nfsMount("s100dserv","/xorApps","/xorApps")\n',
@@ -227,11 +231,8 @@ def configureWindows(iocName):
     dirsToDelete = ['iocBoot/ioc{}/softioc'.format(iocName), ]
 
     #
-    for fp in filesToDelete:
-        remove_file(fp)
-
-    for dp in dirsToDelete:
-        remove_dir(dp)
+    remove_files(filesToDelete)
+    remove_dirs(dirsToDelete)
 
     # Create batch files
     batchFileSkeleton = """@echo OFF
