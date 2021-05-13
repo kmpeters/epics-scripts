@@ -23,8 +23,8 @@ def iocDirCheck(pwd, iocName):
 
 def remove_file(path):
     if os.path.isfile(path):
-        #!os.system("git rm -f {}".format(path))
-        print("git rm -f {}".format(path))
+        print("> git rm -f {}".format(path))
+        os.system("git rm -f {}".format(path))
     else:
         print("{} is not a file".format(path))
 
@@ -43,8 +43,8 @@ def remove_dir(path, saveList=None):
     
     if deleteEntireDir:
         if os.path.isdir(path):
-            #!os.system("git rm -rf {}".format(path))
-            print("git rm -rf {}".format(path))
+            print("> git rm -rf {}".format(path))
+            os.system("git rm -rf {}".format(path))
         else:
             print("{} is not a dir".format(path))
     else:
@@ -65,9 +65,11 @@ def make_dir(path):
 
 def modifyFile(inFileName, outFileName=None, patternsToExclude=None, lineSubstitutions=None):
     if os.path.exists(inFileName):
-        # Create a .new output file none is specified
         if outFileName == None:
-            outFileName = "{}.new".format(inFileName)
+            # Overwrite the input file if no output file is specified
+            outFileName = inFileName
+            # Use a .new extension for testing
+            #outFileName = "{}.new".format(inFileName)
 
         # Read the contents of the file
         with open(inFileName, 'r') as fh:
@@ -96,6 +98,11 @@ def modifyFile(inFileName, outFileName=None, patternsToExclude=None, lineSubstit
                                 break
                     if not ignore:
                         fh.write(line)
+
+        # Stage the modified file to be committed
+        print('> git add {}'.format(outFileName))
+        os.system('git add {}'.format(outFileName))
+
     else:
         print("Error: {} does not exist".format(inFileName))
 
@@ -110,9 +117,6 @@ def createMotorIocsh(iocName):
     lineSubstitutions = {'dbLoadTemplate("substitutions/motor.substitutions", "P=$(PREFIX)")\n': '#dbLoadTemplate("substitutions/motor.substitutions", "P=$(PREFIX)")\n'}
     modifyFile(inFileName, outFileName, patternsToExclude, lineSubstitutions)
     
-    #!os.system('git add {}'.format(newDir))
-    print('git add {}'.format(newDir))
-
 def deleteCommonFiles(iocName):
     filesToDelete = ['LICENSE', 'README', 'README.md', 'start_putrecorder',
         'iocBoot/accessSecurity.acf',
@@ -176,15 +180,9 @@ def configureLinux(iocName):
     lineSubstitutions = {'ARCH = linux-x86_64\n' : ['ARCH = linux-x86_64\n', '#ARCH = linux-x86_64-debug\n']}
     modifyFile(inFileName, patternsToExclude=patternsToExclude, lineSubstitutions=lineSubstitutions)
 
-    #!os.system('git add {}'.format(inFileName))
-    print('git add {}'.format(inFileName))
-
     inFileName = 'configure/CONFIG_SITE'
     lineSubstitutions = {'#CROSS_COMPILER_TARGET_ARCHS = vxWorks-68040\n' : 'CROSS_COMPILER_TARGET_ARCHS = \n'}
     modifyFile(inFileName, lineSubstitutions=lineSubstitutions)
-
-    #!os.system('git add {}'.format(inFileName))
-    print('git add {}'.format(inFileName))
 
 def configureVxWorks(iocName):
     #
@@ -259,10 +257,18 @@ REM start the IOC
 pause
 
 ENDLOCAL"""
-    with open('iocBoot/ioc{}/start_ioc.Win32.bat'.format(iocName), 'w') as fh:
+
+    fn = 'iocBoot/ioc{}/start_ioc.Win32.bat'.format(iocName)
+    with open(fn, 'w') as fh:
         fh.write(batchFileSkeleton.format("win32-x86-static", "Win32"))
-    with open('iocBoot/ioc{}/start_ioc.Win64.bat'.format(iocName), 'w') as fh:
+    print('> git add {}'.format(fn))
+    os.system('git add {}'.format(fn))
+
+    fn = 'iocBoot/ioc{}/start_ioc.Win64.bat'.format(iocName)
+    with open(fn, 'w') as fh:
         fh.write(batchFileSkeleton.format("windows-x64-static", "Win64"))
+    print('> git add {}'.format(fn))
+    os.system('git add {}'.format(fn))
 
     # Modify Makefile
     inFileName = 'iocBoot/ioc{}/Makefile'.format(iocName)
@@ -316,8 +322,12 @@ def main(options):
 
         #
         includeMotorIocsh(iocName)
+
+        #
+        print('> git commit -m "Configured {} for {} with configIOC.py"'.format(iocName, options.os))
+        os.system('git commit -m "Configured {} for {} with configIOC.py"'.format(iocName, options.os))
     else:
-        print("{} is not an IOC dir".format(cwd))
+        print("Error: {} is not an IOC dir".format(cwd))
     
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("configIOC.py")
