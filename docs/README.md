@@ -3,7 +3,11 @@ The less-fun and more-important part of development.
 
 ## makeIOC.sh
 
-[makeIOC.sh](makeIOC.md) is a script that makes it easy to quickly generate a clean vxWorks or Linux IOC.
+A makeIOC.sh-like IOC can be created using [mkioc](https://github.com/BCDA-APS/mkioc) and [configIOC.py](configIOC.md)
+
+```
+$ mkioc -f -n -s 6-1 zzz && cd zzz && configIOC.py linux
+```
 
 ## configIOC.py
 
