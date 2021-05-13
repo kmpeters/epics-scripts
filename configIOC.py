@@ -32,11 +32,11 @@ def remove_files(fileList):
     for fp in fileList:
         remove_file(fp)
 
-def remove_dir(path, save=None):
+def remove_dir(path, saveList=None):
     deleteEntireDir = True
     
-    if save != None:
-        for fp in save:
+    if saveList != None:
+        for fp in saveList:
             if path == os.path.dirname(fp):    
                 deleteEntireDir = False
                 break
@@ -50,14 +50,14 @@ def remove_dir(path, save=None):
     else:
         for fn in os.listdir(path):
             fp = "{}/{}".format(path, fn)
-            if fp in save:
+            if fp in saveList:
                 print("saving {}".format(fp))
             else:
                 remove_file(fp)
 
-def remove_dirs(dirList):
+def remove_dirs(dirList, saveList=None):
     for dp in dirList:
-        remove_dir(dp)
+        remove_dir(dp, saveList)
 
 def make_dir(path):
     if not os.path.exists(path):
@@ -111,7 +111,7 @@ def deleteCommonFiles(iocName):
     ]
     
     remove_files(filesToDelete)
-    remove_dirs(dirsToDelete)
+    remove_dirs(dirsToDelete, filesToKeep)
 
 def patchCommonIocsh(iocName):
     #
