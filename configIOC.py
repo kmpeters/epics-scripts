@@ -107,7 +107,7 @@ def createMotorIocsh(iocName):
     inFileName = 'iocBoot/ioc{}/examples/motors.iocsh'.format(iocName)
     outFileName = '{}/motors.iocsh'.format(newDir)
     patternsToExclude = ['traj', 'pseudo']
-    lineSubstitutions = { 'dbLoadTemplate("substitutions/motor.substitutions", "P=$(PREFIX)")\n': '#dbLoadTemplate("substitutions/motor.substitutions", "P=$(PREFIX)")\n'}
+    lineSubstitutions = {'dbLoadTemplate("substitutions/motor.substitutions", "P=$(PREFIX)")\n': '#dbLoadTemplate("substitutions/motor.substitutions", "P=$(PREFIX)")\n'}
     modifyFile(inFileName, outFileName, patternsToExclude, lineSubstitutions)
     
     #!os.system('git add {}'.format(newDir))
@@ -151,8 +151,12 @@ def patchCommonIocsh(iocName):
     inFileName = 'iocBoot/ioc{}/common.iocsh'.format(iocName)
     lineSubstitutions = {
         'iocshLoad("$(AUTOSAVE)/iocsh/autosave_settings.iocsh", "PREFIX=$(PREFIX), SAVE_PATH=$(TOP)/iocBoot/$(IOC)")\n' : 'iocshLoad("$(AUTOSAVE)/iocsh/autosave_settings.iocsh", "PREFIX=$(PREFIX), SAVE_PATH=$(TOP)/iocBoot/$(IOC), NUM_SEQ=12, SEQ_PERIOD=43200")\n',
-        'set_requestfile_path("$(TOP)/db")\n' : 'set_requestfile_path("$(TOP)/db")\nset_requestfile_path("$(TOP)/xxxApp/Db")\n',
-        'dbLoadRecords("$(ALIVE)/aliveApp/Db/aliveMSGCalc.db", "P=$(PREFIX)")\n' : 'dbLoadRecords("$(ALIVE)/aliveApp/Db/aliveMSGCalc.db", "P=$(PREFIX)")\n\n# Miscellaneous PV\'s, such as burtResult\ndbLoadRecords("$(STD)/stdApp/Db/misc.db","P=$(PREFIX)")\n\n'
+        'set_requestfile_path("$(TOP)/db")\n' : [ 'set_requestfile_path("$(TOP)/db")\n', 'set_requestfile_path("$(TOP)/{}App/Db")\n'.format(iocName)],
+        'dbLoadRecords("$(ALIVE)/aliveApp/Db/aliveMSGCalc.db", "P=$(PREFIX)")\n' : ['dbLoadRecords("$(ALIVE)/aliveApp/Db/aliveMSGCalc.db", "P=$(PREFIX)")\n',
+                                                                                    '\n',
+                                                                                    '# Miscellaneous PV\'s, such as burtResult\n',
+                                                                                    'dbLoadRecords("$(STD)/stdApp/Db/misc.db","P=$(PREFIX)")\n',
+                                                                                    '\n']
     }
     
     modifyFile(inFileName, lineSubstitutions=lineSubstitutions)
@@ -169,14 +173,14 @@ def configureLinux(iocName):
 
     inFileName = 'iocBoot/ioc{}/Makefile'.format(iocName)
     patternsToExclude = ['win', 'vxWorks', 'cdCommands', 'dllPath']
-    lineSubstitutions = { 'ARCH = linux-x86_64\n' : ['ARCH = linux-x86_64\n', '#ARCH = linux-x86_64-debug\n'] }
+    lineSubstitutions = {'ARCH = linux-x86_64\n' : ['ARCH = linux-x86_64\n', '#ARCH = linux-x86_64-debug\n']}
     modifyFile(inFileName, patternsToExclude=patternsToExclude, lineSubstitutions=lineSubstitutions)
 
     #!os.system('git add {}'.format(inFileName))
     print('git add {}'.format(inFileName))
 
     inFileName = 'configure/CONFIG_SITE'
-    lineSubstitutions = { '#CROSS_COMPILER_TARGET_ARCHS = vxWorks-68040\n' : 'CROSS_COMPILER_TARGET_ARCHS = \n' }
+    lineSubstitutions = {'#CROSS_COMPILER_TARGET_ARCHS = vxWorks-68040\n' : 'CROSS_COMPILER_TARGET_ARCHS = \n'}
     modifyFile(inFileName, lineSubstitutions=lineSubstitutions)
 
     #!os.system('git add {}'.format(inFileName))
@@ -264,14 +268,18 @@ ENDLOCAL"""
     inFileName = 'iocBoot/ioc{}/Makefile'.format(iocName)
     patternsToExclude = ['vxWorks', 'linux', 'cdCommands', 'envPaths\n', 'cyg' ]
     lineSubstitutions = { '#ARCH = windows-x64-static\n' : 'ARCH = windows-x64-static\n',
-                       '#ARCH = win32-x86\n' : '#ARCH = win32-x86-static\n#ARCH = win32-x86-debug\n#ARCH = win32-x86\n',
+                       '#ARCH = win32-x86\n' : ['#ARCH = win32-x86-static\n',
+                                                '#ARCH = win32-x86-debug\n',
+                                                '#ARCH = win32-x86\n'],
                        '#TARGETS = envPaths dllPath.bat\n' : 'TARGETS = envPaths dllPath.bat\n',
     }
     modifyFile(inFileName, patternsToExclude=patternsToExclude, lineSubstitutions=lineSubstitutions)
 
 def includeMotorIocsh(iocName):
     #
-    lineSubstitutions = { '< common.iocsh\n' : '< common.iocsh\n\n< iocsh/motors.iocsh\n'}
+    lineSubstitutions = { '< common.iocsh\n' : ['< common.iocsh\n',
+                                                '\n',
+                                                '< iocsh/motors.iocsh\n']}
     startupDir = 'iocBoot/ioc{}'.format(iocName)
 
     for fn in os.listdir(startupDir):
