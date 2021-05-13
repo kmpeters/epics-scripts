@@ -22,17 +22,22 @@ def iocDirCheck(pwd, iocName):
     return iocDir
 
 def remove_file(path):
+    global quiet
     if os.path.isfile(path):
-        print("> git rm -f {}".format(path))
-        os.system("git rm -f {}".format(path))
+        vprint("> git rm -f {}".format(path))
+        if quiet:
+            os.system("git rm -qf {}".format(path))
+        else:
+            os.system("git rm -f {}".format(path))
     else:
-        print("{} is not a file".format(path))
+        vprint("{} is not a file".format(path))
 
 def remove_files(fileList):
     for fp in fileList:
         remove_file(fp)
 
 def remove_dir(path, saveList=None):
+    global quiet
     deleteEntireDir = True
     
     if saveList != None:
@@ -43,15 +48,18 @@ def remove_dir(path, saveList=None):
     
     if deleteEntireDir:
         if os.path.isdir(path):
-            print("> git rm -rf {}".format(path))
-            os.system("git rm -rf {}".format(path))
+            vprint("> git rm -rf {}".format(path))
+            if quiet:
+                os.system("git rm -qrf {}".format(path))
+            else:
+                os.system("git rm -rf {}".format(path))
         else:
-            print("{} is not a dir".format(path))
+            vprint("{} is not a dir".format(path))
     else:
         for fn in os.listdir(path):
             fp = "{}/{}".format(path, fn)
             if fp in saveList:
-                print("saving {}".format(fp))
+                vprint("saving {}".format(fp))
             else:
                 remove_file(fp)
 
@@ -100,11 +108,11 @@ def modifyFile(inFileName, outFileName=None, patternsToExclude=None, lineSubstit
                         fh.write(line)
 
         # Stage the modified file to be committed
-        print('> git add {}'.format(outFileName))
+        vprint('> git add {}'.format(outFileName))
         os.system('git add {}'.format(outFileName))
 
     else:
-        print("Error: {} does not exist".format(inFileName))
+        vprint("{} does not exist".format(inFileName))
 
 def createMotorIocsh(iocName):
     #
@@ -261,13 +269,13 @@ ENDLOCAL"""
     fn = 'iocBoot/ioc{}/start_ioc.Win32.bat'.format(iocName)
     with open(fn, 'w') as fh:
         fh.write(batchFileSkeleton.format("win32-x86-static", "Win32"))
-    print('> git add {}'.format(fn))
+    vprint('> git add {}'.format(fn))
     os.system('git add {}'.format(fn))
 
     fn = 'iocBoot/ioc{}/start_ioc.Win64.bat'.format(iocName)
     with open(fn, 'w') as fh:
         fh.write(batchFileSkeleton.format("windows-x64-static", "Win64"))
-    print('> git add {}'.format(fn))
+    vprint('> git add {}'.format(fn))
     os.system('git add {}'.format(fn))
 
     # Modify Makefile
@@ -293,8 +301,20 @@ def includeMotorIocsh(iocName):
             inFileName = "{}/{}".format(startupDir, fn)
             modifyFile(inFileName, lineSubstitutions=lineSubstitutions)
 
+def vprint(message):
+    global verbose
+    if verbose == True:
+        print(message)
+
+verbose = None
+quiet = None
+
 def main(options):
-    print(options)
+    global verbose
+    verbose = options.verbose
+    global quiet
+    quiet = options.quiet
+    vprint(options)
     
     cwd = os.getcwd()
     
@@ -324,8 +344,11 @@ def main(options):
         includeMotorIocsh(iocName)
 
         #
-        print('> git commit -m "Configured {} for {} with configIOC.py"'.format(iocName, options.os))
-        os.system('git commit -m "Configured {} for {} with configIOC.py"'.format(iocName, options.os))
+        vprint('> git commit -m "Configured {} for {} with configIOC.py"'.format(iocName, options.os))
+        if quiet:
+            os.system('git commit -q -m "Configured {} for {} with configIOC.py"'.format(iocName, options.os))
+        else:
+            os.system('git commit -m "Configured {} for {} with configIOC.py"'.format(iocName, options.os))
     else:
         print("Error: {} is not an IOC dir".format(cwd))
     
@@ -333,6 +356,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser("configIOC.py")
     
     parser.add_argument('os', choices=('linux', 'vxWorks', 'windows'))
+    parser.add_argument('-v', '--verbose', dest='verbose', action="store_true", help="Print commands that are executed")
+    parser.add_argument('-q', '--quiet', dest='quiet', action="store_true", help="Pass the quiet flag to git commands")
     
     options = parser.parse_args(sys.argv[1:])
     
