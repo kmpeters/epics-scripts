@@ -207,6 +207,11 @@ def configureVxWorks(iocName):
     remove_files(filesToDelete)
     remove_dirs(dirsToDelete)
 
+    # Re-enable building for Vxworks
+    inFileName = 'configure/CONFIG_SITE'
+    lineSubstitutions = {'#CROSS_COMPILER_TARGET_ARCHS = vxWorks-68040\n' : 'CROSS_COMPILER_TARGET_ARCHS = vxWorks-ppc32 vxWorks-ppc32-debug vxWorks-ppc32sf vxWorks-ppc32sf-debug\n'}
+    modifyFile(inFileName, lineSubstitutions=lineSubstitutions)
+    
     # Update nfsCommands
     inFileName = 'iocBoot/nfsCommands'
     patternsToExclude = ['oxygen', 'mooney']
@@ -230,6 +235,21 @@ def configureVxWorks(iocName):
                        'TARGETS = cdCommands envPaths dllPath.bat modules.lua\n' : 'TARGETS = cdCommands modules.lua\n',
     }
     modifyFile(inFileName, patternsToExclude=patternsToExclude, lineSubstitutions=lineSubstitutions)
+    
+    # Update st.cmd.vxWorks
+    inFileName = 'iocBoot/ioc{}/st.cmd.vxWorks'.format(iocName)
+    patternsToExclude = []
+    lineSubstitutions = { '< cdCommands.vxWorks-ppc32sf\n' : ['#-< cdCommands.vxWorks-ppc32sf\n', '< cdCommands\n'],
+                       'local_startup = "/enter/startup/directory/here/"\n' : '#-local_startup = "/enter/startup/directory/here/"\n',
+                       'cd local_startup\n' : 'cd startup\n',
+                       'epicsEnvSet("STARTUP", local_startup)\n' : '#-epicsEnvSet("STARTUP", local_startup)\n',
+                       'epicsEnvSet("TOP", "$(STARTUP)/../..")\n' : '#-epicsEnvSet("TOP", "$(STARTUP)/../..")\n',
+    }
+    modifyFile(inFileName, patternsToExclude=patternsToExclude, lineSubstitutions=lineSubstitutions)
+    
+    
+    # Undo changes that allow running from the xxx build on APSshare
+    os.system("sed -i -e 's/xxxbin/topbin/g' -e 's/XXX/TOP/g' -e 's/xxx/{}/g' iocBoot/ioc{}/st.cmd.vxWorks".format(iocName, iocName))
 
 def configureWindows(iocName):
     #
