@@ -184,8 +184,10 @@ def configureLinux(iocName):
     remove_files(filesToDelete)
 
     inFileName = 'iocBoot/ioc{}/Makefile'.format(iocName)
-    patternsToExclude = ['win', 'vxWorks', 'cdCommands', 'dllPath']
-    lineSubstitutions = {'ARCH = linux-x86_64\n' : ['ARCH = linux-x86_64\n', '#ARCH = linux-x86_64-debug\n']}
+    patternsToExclude = ['win', 'vxWorks']
+    lineSubstitutions = {'ARCH = linux-x86_64\n' : ['ARCH = linux-x86_64\n', '#ARCH = linux-x86_64-debug\n'],
+                         'TARGETS = cdCommands envPaths dllPath.bat modules.lua\n' : 'TARGETS = envPaths modules.lua\n',
+    }
     modifyFile(inFileName, patternsToExclude=patternsToExclude, lineSubstitutions=lineSubstitutions)
 
     inFileName = 'configure/CONFIG_SITE'
@@ -221,9 +223,11 @@ def configureVxWorks(iocName):
 
     # Update Makefile
     inFileName = 'iocBoot/ioc{}/Makefile'.format(iocName)
-    patternsToExclude = ['win', 'linux', 'envPaths']
+    patternsToExclude = ['win', 'linux', 'rhel']
     lineSubstitutions = { '#ARCH = vxWorks-ppc32\n' : ['ARCH = vxWorks-ppc32\n', '#ARCH = vxWorks-ppc32-debug\n'],
                        '#TARGETS = cdCommands\n' : 'TARGETS = cdCommands\n',
+                       'TARGETS = envPaths\n' : '#TARGETS = envPaths\n',
+                       'TARGETS = cdCommands envPaths dllPath.bat modules.lua\n' : 'TARGETS = cdCommands modules.lua\n',
     }
     modifyFile(inFileName, patternsToExclude=patternsToExclude, lineSubstitutions=lineSubstitutions)
 
@@ -280,12 +284,14 @@ ENDLOCAL"""
 
     # Modify Makefile
     inFileName = 'iocBoot/ioc{}/Makefile'.format(iocName)
-    patternsToExclude = ['vxWorks', 'linux', 'cdCommands', 'envPaths\n', 'cyg' ]
+    patternsToExclude = ['vxWorks', 'linux', 'rhel', 'cyg' ]
     lineSubstitutions = { '#ARCH = windows-x64-static\n' : 'ARCH = windows-x64-static\n',
                        '#ARCH = win32-x86\n' : ['#ARCH = win32-x86-static\n',
                                                 '#ARCH = win32-x86-debug\n',
                                                 '#ARCH = win32-x86\n'],
+                       'TARGETS = envPaths\n' : '#TARGETS = envPaths\n',
                        '#TARGETS = envPaths dllPath.bat\n' : 'TARGETS = envPaths dllPath.bat\n',
+                       'TARGETS = cdCommands envPaths dllPath.bat modules.lua\n' : 'TARGETS = envPaths dllPath.bat modules.lua\n',
     }
     modifyFile(inFileName, patternsToExclude=patternsToExclude, lineSubstitutions=lineSubstitutions)
 
