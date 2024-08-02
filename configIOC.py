@@ -176,9 +176,12 @@ def patchCommonIocsh(iocName):
 def configureLinux(iocName):
     #
     filesToDelete = [ 'iocBoot/nfsCommands', 
+                      'iocBoot/ioc{}/cdCommands.vxWorks-ppc32'.format(iocName),
+                      'iocBoot/ioc{}/cdCommands.vxWorks-ppc32sf'.format(iocName),
                       'iocBoot/ioc{}/st.cmd.Win32'.format(iocName), 
                       'iocBoot/ioc{}/st.cmd.Win64'.format(iocName),
                       'iocBoot/ioc{}/st.cmd.vxWorks'.format(iocName),
+                      'iocBoot/ioc{}/st.cmd.vxWorks-local'.format(iocName),
         ]
 
     remove_files(filesToDelete)
@@ -254,8 +257,11 @@ def configureVxWorks(iocName):
 def configureWindows(iocName):
     #
     filesToDelete = [ 'iocBoot/nfsCommands'.format(iocName), 
+                      'iocBoot/ioc{}/cdCommands.vxWorks-ppc32'.format(iocName),
+                      'iocBoot/ioc{}/cdCommands.vxWorks-ppc32sf'.format(iocName),
                       'iocBoot/ioc{}/st.cmd.vxWorks'.format(iocName),
                       'iocBoot/ioc{}/st.cmd.Linux'.format(iocName),
+                      'iocBoot/ioc{}/st.cmd.vxWorks-local'.format(iocName),
         ]
 
     dirsToDelete = ['iocBoot/ioc{}/softioc'.format(iocName), ]
