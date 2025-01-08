@@ -134,6 +134,7 @@ def deleteCommonFiles(iocName):
         'iocBoot/ioc{}/softioc/in-screen.sh'.format(iocName),
         'iocBoot/ioc{}/softioc/run'.format(iocName),
         'iocBoot/ioc{}/st.cmd.Cygwin'.format(iocName),
+        'iocBoot/ioc{}/st.cmd.Linux-arm'.format(iocName),
         '{}App/Db/Security_Control.db'.format(iocName),
         '{}App/Db/Security_Control_settings.req'.format(iocName),
         '{}App/Db/streamExample.db'.format(iocName),
